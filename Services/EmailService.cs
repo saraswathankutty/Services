@@ -35,6 +35,7 @@ namespace ACI.Service
                 string senderPassword = _config[EmailConstantVariable.PASSWORD];
                 int Portno = Convert.ToInt16(_config[EmailConstantVariable.PORT]);
                 bool SSLs = Convert.ToBoolean(_config[EmailConstantVariable.SSL]);
+                _log.LogInformation($"MailSending :: Configuration Loaded. Sender: {senderEmail}, Port: {Portno}, SSL: {SSLs}");
                 MailMessage message = new MailMessage();
 
                 string toAddressesStr = "";
@@ -45,6 +46,11 @@ namespace ACI.Service
                     {
                         message.To.Add(new MailAddress(toAddress));
                     }
+                    _log.LogInformation($"MailSending :: Added {Mv.To_Address.Count} To Address(es)");
+                }
+                else
+                {
+                    _log.LogWarning("MailSending :: No To Address(es) provided");
                 }
 
                 if (Mv.CC_Address != null && Mv.CC_Address.Count > 0)
@@ -53,6 +59,7 @@ namespace ACI.Service
                     {
                         message.CC.Add(new MailAddress(toAddress));
                     }
+                    _log.LogInformation($"MailSending :: Added {Mv.CC_Address.Count} CC Address(es)");
                 }
 
                 if (Mv.BCC_Address != null && Mv.BCC_Address.Count > 0)
@@ -61,12 +68,14 @@ namespace ACI.Service
                     {
                         message.Bcc.Add(new MailAddress(toAddress));
                     }
+                    _log.LogInformation($"MailSending :: Added {Mv.BCC_Address.Count} BCC Address(es)");
                 }
 
                 message.From = new MailAddress(senderEmail, "Portfolio Contact");
                 message.Subject = Mv.Subject;
                 message.Body = Mv.Body;
                 message.IsBodyHtml = true;
+                _log.LogInformation("MailSending :: Basic message details (Subject, Body) set up");
 
                 if (Mv.File != null && Mv.File.Count > 0)
                 {
@@ -81,6 +90,7 @@ namespace ACI.Service
                             message.Attachments.Add(attachment);
                         }
                     }
+                    _log.LogInformation($"MailSending :: Processed and attached {Mv.File.Count} file(s)");
                 }
 
                 SmtpClient client = new SmtpClient("smtp.gmail.com")
@@ -92,9 +102,12 @@ namespace ACI.Service
                     Timeout = 30000
                 };
 
+                _log.LogInformation("MailSending :: Attempting to send email via SmtpClient");
                 await client.SendMailAsync(message);
+                _log.LogInformation("MailSending :: Email successfully sent via SmtpClient");
                 res = true;
 
+                _log.LogInformation("MailSending :: Saving email log to database with Sent status");
                 var emailLog = new EmailLog
                 {
                     FromAddress = senderEmail,
@@ -107,6 +120,7 @@ namespace ACI.Service
                 };
                 _db.EmailLogs.Add(emailLog);
                 await _db.SaveChangesAsync();
+                _log.LogInformation("MailSending :: Process :: End - Success");
 
                 return true;
             }
