@@ -16,6 +16,9 @@ using ACI.IServices.Main.Portfolio;
 using ACI.Middlewares;
 using ACI.BackgroundServices;
 
+// Disable IPv6 to fix 'Network is unreachable' error in Docker/Render environments
+AppContext.SetSwitch("System.Net.DisableIPv6", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure JwtSettings
