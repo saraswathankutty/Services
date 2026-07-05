@@ -87,7 +87,9 @@ namespace ACI.Service
                 {
                     Credentials = new NetworkCredential(senderEmail, senderPassword),
                     EnableSsl = SSLs,
-                    Port = Portno
+                    Port = Portno,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    Timeout = 30000
                 };
 
                 await client.SendMailAsync(message);
