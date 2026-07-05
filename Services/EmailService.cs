@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using System.Net;
+using System.Net.Http.Json;
 using ACI.Service.IService;
 using ACI.DTO.ReqDTO.Email;
 using ACI.Common;
@@ -30,6 +31,9 @@ namespace ACI.Service
             bool res = false;
             try
             {
+                /*===================================================================
+                  ORIGINAL SMTP CODE (COMMENTED OUT FOR RENDER HOSTING)
+                  ===================================================================
                 _log.LogInformation("MailSending :: Process :: Start");
                 string senderEmail = _config[EmailConstantVariable.EMAIL_NAME];
                 string senderPassword = _config[EmailConstantVariable.PASSWORD];
@@ -121,8 +125,43 @@ namespace ACI.Service
                 _db.EmailLogs.Add(emailLog);
                 await _db.SaveChangesAsync();
                 _log.LogInformation("MailSending :: Process :: End - Success");
+                ===================================================================*/
 
-                return true;
+                _log.LogInformation("MailSending :: Forwarding request to Somee API");
+
+                using var httpClient = new HttpClient();
+                
+                var payload = new 
+                {
+                    To_Address = Mv.To_Address,
+                    CC_Address = Mv.CC_Address,
+                    BCC_Address = Mv.BCC_Address,
+                    Subject = Mv.Subject,
+                    Body = Mv.Body,
+                    LogBody = Mv.LogBody
+                };
+
+                string apiUrl = _config[EmailConstantVariable.API_URL];
+                _log.LogInformation($"MailSending :: Attempting to send request to {apiUrl}");
+                
+                // If the SendEmail endpoint on Somee requires a JWT token, you will need to add it here
+                // e.g., httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "YOUR_TOKEN");
+
+                var response = await httpClient.PostAsJsonAsync(apiUrl, payload);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    _log.LogInformation("MailSending :: Email forwarded successfully to Somee API");
+                    res = true;
+                }
+                else
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    _log.LogError($"MailSending :: Somee API returned status {response.StatusCode}. Body: {responseBody}");
+                    throw new Exception($"Somee API failed with status {response.StatusCode}");
+                }
+                
+                return res;
             }
             catch (Exception ex)
             {
