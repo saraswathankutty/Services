@@ -1,0 +1,40 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# Publish and Deployment
+[Pp]ublish/
+[Dd]eploy/
+*[Pp]ublish[Pp]rofiles/
+
+# Logs
+[Ll]og/
+[Ll]ogs/
+*.log
+*.err
+*.pid
+
+# Visual Studio and IDEs
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# User-specific App Settings
+appsettings.Development.json
+appsettings.Local.json
+
+# Environment Variables
+.env
+.env.local
