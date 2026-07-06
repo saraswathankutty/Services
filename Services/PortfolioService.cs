@@ -21,7 +21,7 @@ namespace ACI.Service
             {
                 // 1. Send email to Me (Portfolio Owner)
                 string contactTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ContactTemplate.html");
-                string contactBody = req.Message;
+                string contactBody = System.Text.Json.JsonSerializer.Serialize(req);
                 if (System.IO.File.Exists(contactTemplatePath))
                 {
                     string template = await System.IO.File.ReadAllTextAsync(contactTemplatePath);
