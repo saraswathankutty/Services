@@ -133,26 +133,36 @@ namespace ACI.Service
                 
                 var payload = new 
                 {
-                    To_Address = Mv.To_Address,
-                    CC_Address = Mv.CC_Address,
-                    BCC_Address = Mv.BCC_Address,
-                    Subject = Mv.Subject,
-                    Body = Mv.Body,
-                    LogBody = Mv.LogBody
+                    to = Mv.To_Address != null ? string.Join(",", Mv.To_Address) : "",
+                    subject = Mv.Subject,
+                    html = Mv.Body
                 };
 
                 string apiUrl = _config[EmailConstantVariable.API_URL];
+                string apiKey = _config[EmailConstantVariable.API_MAIL_KEY];
                 _log.LogInformation($"MailSending :: Attempting to send request to {apiUrl}");
                 
-                // If the SendEmail endpoint on Somee requires a JWT token, you will need to add it here
-                // e.g., httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "YOUR_TOKEN");
-
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
                 var response = await httpClient.PostAsJsonAsync(apiUrl, payload);
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    _log.LogInformation("MailSending :: Email forwarded successfully to Somee API");
+                    _log.LogInformation("MailSending :: Email forwarded successfully to API");
                     res = true;
+
+                    _log.LogInformation("MailSending :: Saving email log to database with Sent status");
+                    var emailLog = new EmailLog
+                    {
+                        FromAddress = _config[EmailConstantVariable.EMAIL_NAME] ?? "API",
+                        ToAddress = payload.to,
+                        Subject = payload.subject,
+                        MessageBody = string.IsNullOrEmpty(Mv.LogBody) ? Mv.Body : Mv.LogBody,
+                        CreatedDate = DateTime.UtcNow,
+                        Status = "Sent",
+                        ErrorMessage = ""
+                    };
+                    _db.EmailLogs.Add(emailLog);
+                    await _db.SaveChangesAsync();
                 }
                 else
                 {
